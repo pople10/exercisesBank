@@ -138,13 +138,12 @@ public class PanelGUI extends JFrame {
 		{
 		    public void actionPerformed(ActionEvent e)
 		    {
-		    	System.out.println("sss");
 		        JTable table = (JTable)e.getSource();
 		        int modelRow = Integer.valueOf( e.getActionCommand() );
 		        Long idSelected = (Long) ((DefaultTableModel)table.getModel()).getValueAt(modelRow,0);
-
 		        try {
 		        	exoService.deleteExercise(idSelected);
+		        	Dialogs.showSuccessMessage("Deleted with success");
 				} catch (SQLException ex) {
 					Dialogs.showErrorMessage("Error : "+ex.getMessage());
 				}
@@ -156,7 +155,6 @@ public class PanelGUI extends JFrame {
 		{
 		    public void actionPerformed(ActionEvent e)
 		    {
-		    	System.out.println("sss");
 		        JTable table = (JTable)e.getSource();
 		        int modelRow = Integer.valueOf( e.getActionCommand() );
 		        Long idSelected = (Long) ((DefaultTableModel)table.getModel()).getValueAt(modelRow,0);
@@ -170,6 +168,7 @@ public class PanelGUI extends JFrame {
 		        exoTmp.setQuestion(questionSelected);
 		        try {
 					exoService.updateExercise(exoTmp);
+		        	Dialogs.showSuccessMessage("Updated with success");
 				} catch (SQLException ex) {
 					Dialogs.showErrorMessage("Error : "+ex.getMessage());
 				}
