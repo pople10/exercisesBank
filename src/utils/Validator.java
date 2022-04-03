@@ -13,4 +13,16 @@ public class Validator {
 			return false;
 		return true;
 	}
+	
+	public static boolean validateIntegerAsString(String integer)
+	{
+		try
+		{
+			Integer.parseInt(integer);
+			return true;
+		}catch(Exception e)
+		{
+			return false;
+		}
+	}
 }

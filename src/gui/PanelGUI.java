@@ -1,6 +1,7 @@
 package gui;
 
 import java.awt.BorderLayout;
+import java.awt.CardLayout;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridLayout;
@@ -10,11 +11,14 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -100,7 +104,7 @@ public class PanelGUI extends JFrame {
 			adding();
 		});
 		extract.addActionListener(e->{
-			System.out.println("Extract");
+			extracting();
 		});
 		all.addActionListener(e->{
 			managing();
@@ -110,13 +114,88 @@ public class PanelGUI extends JFrame {
 		menu1.add(all);
 		return mb;
 	}
-	
+	private void extracting()
+	{
+		List<String> cats = new ArrayList<String>();
+		cats.add("");
+		try {
+			cats.addAll(this.exoService.listAllCategories());
+		} catch (SQLException e) {
+			home();
+			Dialogs.showErrorMessage("Error : "+e.getMessage());
+		}
+		this.getContentPane().removeAll();
+		this.repaint();
+		this.setVisible(false);
+		this.setLayout( new GridLayout(0,1));
+		JLabel ComoboLabel = new JLabel("Category");
+		JLabel limitLabel = new JLabel("Nombre maximal");
+		JLabel categoryLabel = new JLabel("Category");
+		JComboBox<String> categoryInput = new JComboBox<String>();
+		for(String cat : cats)
+		{
+			categoryInput.addItem(cat);
+		}
+		JTextField limitInput = new JTextField();
+		JButton button = new JButton("Extract");
+		this.add(ComoboLabel);
+		this.add(categoryInput);
+		this.add(limitLabel);
+		this.add(limitInput);
+		button.addActionListener(e->{
+			List<Exercise> list = new ArrayList<Exercise>();
+			String catSelected = categoryInput.getSelectedItem().toString();
+			String limit = limitInput.getText();
+			if(limit.equals(""))
+				limit="-1";
+			if(Validator.validateIntegerAsString(limit))
+			{
+				button.setEnabled(false);
+				button.setText("Extracting...");
+				Integer limitInt = Integer.parseInt(limit);
+				try {
+					if(limitInt<0)
+					{
+						if(catSelected.trim().isEmpty())
+							list=exoService.findAllExercises();
+						else
+							list=exoService.findAllExercisesByCategory(catSelected);
+					}
+					else
+					{
+						if(catSelected.trim().isEmpty())
+							list=exoService.findAllExercises(limitInt);
+						else
+							list=exoService.findAllExercisesByCategory(catSelected,limitInt);
+					}
+					System.out.println(list);
+				}
+				catch(SQLException ex)
+				{
+					Dialogs.showErrorMessage("Error : "+ex.getMessage());
+				}
+				finally
+				{
+					button.setEnabled(true);
+					button.setText("Extract");
+				}
+			}
+		});
+		this.add(button);
+		for(int i=0;i<29;i++)
+		{
+			this.add(new JLabel());
+		}
+		setSizing();
+		this.setVisible(true);
+	}
 	private void managing()
 	{
 		Exercise exo = new Exercise();
 		this.getContentPane().removeAll();
 		this.repaint();
 		this.setVisible(false);
+		this.setLayout(new CardLayout());
 		String[] columnNames = {"#", "Question", "Answer", "Category","",""};
 		Object[][] data = null;
 		try {

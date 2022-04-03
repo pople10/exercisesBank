@@ -40,6 +40,14 @@ public class ExerciseService {
 		return (List<Exercise>) mapper.mapperList(this.exerciseDao.findAll(),new Exercise());
 	}
 	
+	public List<Exercise> findAllExercises(int limit) throws SQLException
+	{
+		List<Exercise> list =  (List<Exercise>) mapper.mapperList(this.exerciseDao.findAll(),new Exercise());
+		if(list.size()<=limit)
+			return list;
+		return list.subList(0, limit);
+	}
+	
 	public List<Exercise> findAllExercisesByCategory(String category) throws SQLException
 	{
 		return (List<Exercise>) mapper.mapperList(this.exerciseDao.findByCategorie(category),new Exercise());
