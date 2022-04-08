@@ -148,12 +148,18 @@ public class PanelGUI extends JFrame {
 				button.setEnabled(false);
 				button.setText("Extractant...");
 				try {
+					String mat=null;
 					if(catSelected.trim().isEmpty())
+					{
 						list=exoService.findAllExercises();
+					}
 					else
+					{
+						mat=catSelected;
 						list=exoService.findAllExercisesByCategory(catSelected);
-				
-					generating(list);
+					}
+					
+					generating(list,mat);
 				}
 				catch(SQLException ex)
 				{
@@ -174,7 +180,7 @@ public class PanelGUI extends JFrame {
 		this.setVisible(true);
 	}
 	
-	private void generating(List<Exercise> exos)
+	private void generating(List<Exercise> exos,String matiere)
 	{
 		this.getContentPane().removeAll();
 		this.repaint();
@@ -221,6 +227,9 @@ public class PanelGUI extends JFrame {
 						listExos.add(tmp);
 					}
 					try {
+						String title="Examen";
+						if(matiere!=null)
+							title+="pour matiere "+matiere;
 						exoService.generatePDF(listExos,new Callback() {
 
 							@Override
@@ -228,7 +237,7 @@ public class PanelGUI extends JFrame {
 								extracting();
 							}
 							
-						});
+						},title);
 					} catch (Exception e1) {
 						Dialogs.showErrorMessage("Erreur : "+e1.getMessage());
 					}

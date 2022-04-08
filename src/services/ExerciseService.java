@@ -1,16 +1,23 @@
 package services;
 
+import java.io.File;
+import java.io.IOException;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+
+import javax.swing.JFileChooser;
 
 import beans.Exercise;
 import dao.ExerciseDao;
 import mapper.Mapper;
 import utils.Callback;
 import utils.FileUtil;
+import utils.StreamPrinter;
 import utils.GenericUtil;
+import utils.LatexUtil;
 
 public class ExerciseService {
 	private Mapper mapper = Mapper.getInstance();
@@ -80,7 +87,7 @@ public class ExerciseService {
 		return this.exerciseDao.listAllCategories();
 	}
 	
-	public void generatePDF(List<Exercise> list,Callback function) throws Exception
+	public void generatePDF(List<Exercise> list,Callback function,String title) throws Exception
 	{
 		String content = FileUtil.getContentFromPath("template/latex/examTemplate.txt");
 		if(content==null)
@@ -90,25 +97,63 @@ public class ExerciseService {
 		Calendar today = Calendar.getInstance();
 		String date="";
 		try {
-			 date= ""+today.get(Calendar.DAY_OF_MONTH)+" "+today.get(Calendar.MONTH);
+			 date= ""+today.get(Calendar.DAY_OF_MONTH)+" "+
+					 (new SimpleDateFormat("MMM")).format(today.getTime())
+					 +" "+today.get(Calendar.YEAR);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		content=content.replace("**date**", date);
-		content=content.replace("**title**", "Title");
+		content=content.replace("**title**", title);
 		String qsts = "";
 		String both = "";
 		String content2 = new String(content);
 		for(Exercise exo : list)
 		{
+			qsts+="\t\\item "+exo.getQuestion().replace("\n", "\\linebreak ")+"\n";
 			both+="\t\\item "+exo.getQuestion().replace("\n", "\\linebreak ");
 			both+="\\linebreak \\textbf{Reponse:} \\linebreak "+exo.getAnswer().replace("\n", "\\linebreak ")+"\n";
 		}
 		content=content.replace("**qsts**", qsts);
 		content2=content2.replace("**qsts**", both);
-		System.out.println(content);
-		System.out.println(content2);
+		String now = ""+(new Date()).getTime();
+		File file1 = FileUtil.makeFile(now+".tex", content);
+		String filename=file1.getName();
+		String path = file1.getAbsolutePath().replace("\\"+filename, "");
+		try {
+			ProcessBuilder pb = new ProcessBuilder("cmd.exe", "/c",LatexUtil.BINPATH+"pdflatex.exe "+filename);
+	        pb.directory(new File(path));
+	        try {
+	            Process p = pb.start();
+	            StreamPrinter fluxSortie = new StreamPrinter(p.getInputStream(), true);
+	            StreamPrinter fluxErreur = new StreamPrinter(p.getErrorStream(), true);
+	            new Thread(fluxSortie).start();
+	            new Thread(fluxErreur).start();
+	            p.waitFor();
+	        } catch (IOException | InterruptedException ex) {
+	            ex.printStackTrace();
+	        }
+		}
+		catch(Exception e)
+		{
+			file1.delete();
+		}
+		file1.delete();
+		File pdf1 = new File(path+File.separator+now+".pdf");
+		if(pdf1.exists())
+		{
+			JFileChooser f = new JFileChooser();
+	        f.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY); 
+	        f.showSaveDialog(null);
+	        System.out.println(f.getCurrentDirectory());
+	        String saveTo = f.getSelectedFile().getAbsolutePath();
+	        File toSaveFile = new File(saveTo+File.separator+"examen-"+now+".pdf");
+	        toSaveFile.createNewFile();
+	        FileUtil.copyFileUsingStreamWithDelete(pdf1, toSaveFile);
+	        function.call();
+		}
+		
 	}
 	
 	/**************************** Singeleton ***************************/
