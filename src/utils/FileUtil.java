@@ -32,6 +32,34 @@ public class FileUtil {
 		return file;
 	}
 	
+	public static File writeAndMakeFile(String path,String content)
+	{
+		File file = new File(path);
+		try {
+			if(!file.exists())
+				file.createNewFile();
+            FileWriter fw = new FileWriter(file.getAbsoluteFile());
+            BufferedWriter bw = new BufferedWriter(fw);
+            bw.write(content);
+            bw.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		}
+		return file;
+	}
+	
+	public static void openFile(File file)
+	{
+        try {
+        	java.awt.Desktop.getDesktop().open(file);
+        }
+        catch(Exception e)
+        {
+        	
+        }
+	}
+	
 	public static String getContentFromPath(String path)
 	{
 		File file = new File(path);
@@ -43,6 +71,7 @@ public class FileUtil {
     		BufferedReader br= new BufferedReader(new FileReader(file));
 			while ((st = br.readLine()) != null)
 				out+=st+"\n";
+			br.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 			return null;
