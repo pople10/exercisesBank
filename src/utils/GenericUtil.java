@@ -134,7 +134,7 @@ public class GenericUtil {
 		for(int i=0;i<size;i++)
 		{
 			Exercise exo = list.get(i);
-			out[i]= new Object[]{exo.getId(),exo.getQuestion(),exo.getAnswer(),exo.getCategory()};
+			out[i]= new Object[]{exo.getId(),exo.getQuestion(),exo.getAnswer(),exo.getMatiere(),exo.getProf()};
 		}
 		return out;
 	}

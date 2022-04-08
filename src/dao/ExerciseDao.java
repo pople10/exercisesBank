@@ -19,7 +19,7 @@ public class ExerciseDao extends GenericDao{
 	
 	public ResultSet findByCategorie(String categorie) throws SQLException
 	{
-		return this.findByColumn(categorie, "category");
+		return this.findByColumn(categorie, "matiere");
 	}
 
 	public static ExerciseDao getDao() {
@@ -34,13 +34,13 @@ public class ExerciseDao extends GenericDao{
 	 {
 		 List<String> list = new ArrayList<String>();
 		 try {
-			 String sql = "SELECT DISTINCT category FROM "+DB_NAME+" WHERE 1";
+			 String sql = "SELECT DISTINCT matiere FROM "+DB_NAME+" WHERE 1";
 			 Statement statement = DBConnection.openSession().getConnection().createStatement();
 			 ResultSet set = statement.executeQuery(sql);
 			 if(set!=null)
 				 while(set.next())
 				 {
-					 list.add(set.getString("category"));
+					 list.add(set.getString("matiere"));
 				 }
 		 }
 		 catch(SQLException sqlExp)

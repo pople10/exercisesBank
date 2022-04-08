@@ -1,0 +1,11 @@
+\documentclass[12pt, letterpaper, twoside]{article}
+\usepackage[utf8]{inputenc}
+\title{**title**}
+\date{**date**}
+\begin{document}
+\maketitle
+\begin{enumerate}
+**qsts**
+\end{enumerate}
+
+\end{document}

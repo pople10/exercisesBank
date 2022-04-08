@@ -1,11 +1,15 @@
 package services;
 
 import java.sql.SQLException;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import beans.Exercise;
 import dao.ExerciseDao;
 import mapper.Mapper;
+import utils.Callback;
+import utils.FileUtil;
 import utils.GenericUtil;
 
 public class ExerciseService {
@@ -66,9 +70,45 @@ public class ExerciseService {
 		return GenericUtil.generateDataTableFromExercises(this.findAllExercises());
 	}
 	
+	public Object[][] getForDatatable(List<Exercise> list) throws SQLException
+	{
+		return GenericUtil.generateDataTableFromExercises(list);
+	}
+	
 	public List<String> listAllCategories() throws SQLException
 	{
 		return this.exerciseDao.listAllCategories();
+	}
+	
+	public void generatePDF(List<Exercise> list,Callback function) throws Exception
+	{
+		String content = FileUtil.getContentFromPath("template/latex/examTemplate.txt");
+		if(content==null)
+		{
+			throw new Exception("Erreur se produit");
+		}
+		Calendar today = Calendar.getInstance();
+		String date="";
+		try {
+			 date= ""+today.get(Calendar.DAY_OF_MONTH)+" "+today.get(Calendar.MONTH);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		content=content.replace("**date**", date);
+		content=content.replace("**title**", "Title");
+		String qsts = "";
+		String both = "";
+		String content2 = new String(content);
+		for(Exercise exo : list)
+		{
+			both+="\t\\item "+exo.getQuestion().replace("\n", "\\linebreak ");
+			both+="\\linebreak \\textbf{Reponse:} \\linebreak "+exo.getAnswer().replace("\n", "\\linebreak ")+"\n";
+		}
+		content=content.replace("**qsts**", qsts);
+		content2=content2.replace("**qsts**", both);
+		System.out.println(content);
+		System.out.println(content2);
 	}
 	
 	/**************************** Singeleton ***************************/

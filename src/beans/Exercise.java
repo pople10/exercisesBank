@@ -11,7 +11,17 @@ public class Exercise extends GenericBean {
 	
 	private String answer;
 	
-	private String category;
+	private String matiere;
+	
+	private String prof;
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
 
 	public String getQuestion() {
 		return question;
@@ -29,25 +39,26 @@ public class Exercise extends GenericBean {
 		this.answer = answer;
 	}
 
-	public String getCategory() {
-		return category;
+	public String getMatiere() {
+		return matiere;
 	}
 
-	public void setCategory(String category) {
-		this.category = category;
+	public void setMatiere(String matiere) {
+		this.matiere = matiere;
 	}
 
-	public Long getId() {
-		return id;
+	public String getProf() {
+		return prof;
 	}
 
-	public void setId(Long id) {
-		this.id = id;
+	public void setProf(String prof) {
+		this.prof = prof;
 	}
 
 	@Override
 	public String toString() {
-		return "Exercise [id=" + id + ", question=" + question + ", answer=" + answer + ", category=" + category + "]";
+		return "Exercise [id=" + id + ", question=" + question + ", answer=" + answer + ", matiere=" + matiere
+				+ ", prof=" + prof + "]";
 	}
 	
 	

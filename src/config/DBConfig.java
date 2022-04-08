@@ -8,7 +8,8 @@ public class DBConfig implements Configurable{
 	@Override
 	public void run() throws Exception {
 		DBHelper.CreateTable("exercise","id","int NOT NULL AUTO_INCREMENT","question","TEXT"
-				,"answer","TEXT","category","VARCHAR(255)","PRIMARY KEY","(id)");
+				,"answer","TEXT","matiere","VARCHAR(255)","prof","VARCHAR(255)",
+				"PRIMARY KEY","(id)");
 	}
 
 }

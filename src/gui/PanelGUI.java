@@ -8,6 +8,7 @@ import java.awt.GridLayout;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.sql.SQLException;
@@ -25,9 +26,11 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableModel;
 
@@ -35,6 +38,7 @@ import beans.Exercise;
 import gui.messages.Dialogs;
 import gui.utils.ButtonColumn;
 import services.ExerciseService;
+import utils.Callback;
 import utils.Validator;
 
 public class PanelGUI extends JFrame {
@@ -48,7 +52,7 @@ public class PanelGUI extends JFrame {
 	    int x = (int) ((dimension.getWidth() - this.getWidth()) / 2);
 	    int y = (int) ((dimension.getHeight() - this.getHeight()) / 2);
 	    this.setLocation(x,y);
-		this.setTitle("Exercises Bank");
+		this.setTitle("ExoBank");
 		home();
 		this.setIconImage((new ImageIcon("images/logo.png")).getImage());
 		this.setJMenuBar(getMenu());
@@ -61,7 +65,7 @@ public class PanelGUI extends JFrame {
 		this.getContentPane().removeAll();
 		this.repaint();
 		this.setLayout(new BorderLayout());
-		JLabel welcomingLabel = new JLabel("Welcome to our application", SwingConstants.CENTER);
+		JLabel welcomingLabel = new JLabel("Bienvenue sur notre application ExoBank V1.0", SwingConstants.CENTER);
 		welcomingLabel.setFont(new Font("Times New Roman", Font.PLAIN, 42));
 		this.add(welcomingLabel,BorderLayout.CENTER);
 		setSizing();
@@ -71,11 +75,11 @@ public class PanelGUI extends JFrame {
 	private JMenuBar getMenu()
 	{
 		JMenuBar mb=new JMenuBar();
-		JMenu menu = new JMenu("Home"); 
-		JMenu menu1 = new JMenu("Exercise"); 
-		JMenuItem add = new JMenuItem("Add");    
-		JMenuItem all = new JMenuItem("All exercises");
-		JMenuItem extract = new JMenuItem("Extract");
+		JMenu menu = new JMenu("Acceuil"); 
+		JMenu menu1 = new JMenu("Exercice"); 
+		JMenuItem add = new JMenuItem("Ajouter");    
+		JMenuItem all = new JMenuItem("Tous les exercices");
+		JMenuItem extract = new JMenuItem("Extracter");
 		menu.addMouseListener(new MouseListener() {
 			  @Override
 			  public void mouseClicked(MouseEvent e) {
@@ -122,64 +126,44 @@ public class PanelGUI extends JFrame {
 			cats.addAll(this.exoService.listAllCategories());
 		} catch (SQLException e) {
 			home();
-			Dialogs.showErrorMessage("Error : "+e.getMessage());
+			Dialogs.showErrorMessage("Erreur : "+e.getMessage());
 		}
 		this.getContentPane().removeAll();
 		this.repaint();
 		this.setVisible(false);
 		this.setLayout( new GridLayout(0,1));
-		JLabel ComoboLabel = new JLabel("Category");
-		JLabel limitLabel = new JLabel("Nombre maximal");
-		JLabel categoryLabel = new JLabel("Category");
+		JLabel ComoboLabel = new JLabel("Matiere");
+		JLabel categoryLabel = new JLabel("Matiere");
 		JComboBox<String> categoryInput = new JComboBox<String>();
 		for(String cat : cats)
 		{
 			categoryInput.addItem(cat);
 		}
-		JTextField limitInput = new JTextField();
-		JButton button = new JButton("Extract");
+		JButton button = new JButton("Extracter");
 		this.add(ComoboLabel);
 		this.add(categoryInput);
-		this.add(limitLabel);
-		this.add(limitInput);
 		button.addActionListener(e->{
 			List<Exercise> list = new ArrayList<Exercise>();
 			String catSelected = categoryInput.getSelectedItem().toString();
-			String limit = limitInput.getText();
-			if(limit.equals(""))
-				limit="-1";
-			if(Validator.validateIntegerAsString(limit))
-			{
 				button.setEnabled(false);
-				button.setText("Extracting...");
-				Integer limitInt = Integer.parseInt(limit);
+				button.setText("Extractant...");
 				try {
-					if(limitInt<0)
-					{
-						if(catSelected.trim().isEmpty())
-							list=exoService.findAllExercises();
-						else
-							list=exoService.findAllExercisesByCategory(catSelected);
-					}
+					if(catSelected.trim().isEmpty())
+						list=exoService.findAllExercises();
 					else
-					{
-						if(catSelected.trim().isEmpty())
-							list=exoService.findAllExercises(limitInt);
-						else
-							list=exoService.findAllExercisesByCategory(catSelected,limitInt);
-					}
-					System.out.println(list);
+						list=exoService.findAllExercisesByCategory(catSelected);
+				
+					generating(list);
 				}
 				catch(SQLException ex)
 				{
-					Dialogs.showErrorMessage("Error : "+ex.getMessage());
+					Dialogs.showErrorMessage("Erreur : "+ex.getMessage());
 				}
 				finally
 				{
 					button.setEnabled(true);
 					button.setText("Extract");
 				}
-			}
 		});
 		this.add(button);
 		for(int i=0;i<29;i++)
@@ -189,6 +173,81 @@ public class PanelGUI extends JFrame {
 		setSizing();
 		this.setVisible(true);
 	}
+	
+	private void generating(List<Exercise> exos)
+	{
+		this.getContentPane().removeAll();
+		this.repaint();
+		this.setVisible(false);
+		this.setLayout(new CardLayout());
+		String[] columnNames = {"#", "Question", "Réponse", "Matiere","Professeur"};
+		Object[][] data = null;
+		try {
+			data = this.exoService.getForDatatable(exos);
+		} catch (SQLException e) {
+			home();
+			Dialogs.showErrorMessage("Erreur : "+e.getMessage());
+		}
+		DefaultTableModel model = new DefaultTableModel(data, columnNames);
+		JTable table = new JTable(model){
+			  public boolean isCellEditable(int row,int column){
+				    return false;
+				  }
+				};
+		table.setPreferredScrollableViewportSize(table.getPreferredSize());
+		table.setFillsViewportHeight(true);
+		table.setSelectionMode( ListSelectionModel.SINGLE_INTERVAL_SELECTION );
+		table.addKeyListener(new KeyListener() {
+
+			@Override
+			public void keyTyped(KeyEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if(e.getKeyCode()==KeyEvent.VK_ENTER)
+				{
+					List<Exercise> listExos = new ArrayList<Exercise>();
+					for(Integer i : table.getSelectedRows())
+					{
+						Exercise tmp = new Exercise();
+						tmp.setId((Long) table.getValueAt(i, 0));
+						tmp.setQuestion((String) table.getValueAt(i, 1));
+						tmp.setAnswer((String) table.getValueAt(i, 2));
+						tmp.setMatiere((String) table.getValueAt(i, 3));
+						tmp.setProf((String) table.getValueAt(i, 4));
+						listExos.add(tmp);
+					}
+					try {
+						exoService.generatePDF(listExos,new Callback() {
+
+							@Override
+							public void call() {
+								extracting();
+							}
+							
+						});
+					} catch (Exception e1) {
+						Dialogs.showErrorMessage("Erreur : "+e1.getMessage());
+					}
+				}
+			}
+
+			@Override
+			public void keyReleased(KeyEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+		});
+		JScrollPane scrollPane = new JScrollPane(table);
+		this.add(scrollPane);
+		setSizing();
+		this.setVisible(true);
+	}
+	
 	private void managing()
 	{
 		Exercise exo = new Exercise();
@@ -196,18 +255,19 @@ public class PanelGUI extends JFrame {
 		this.repaint();
 		this.setVisible(false);
 		this.setLayout(new CardLayout());
-		String[] columnNames = {"#", "Question", "Answer", "Category","",""};
+		String[] columnNames = {"#", "Question", "Réponse", "Matiere","Professeur","",""};
 		Object[][] data = null;
 		try {
 			data = this.exoService.getForDatatable();
 		} catch (SQLException e) {
 			home();
-			Dialogs.showErrorMessage("Error : "+e.getMessage());
+			Dialogs.showErrorMessage("Erreur : "+e.getMessage());
 		}
 		DefaultTableModel model = new DefaultTableModel(data, columnNames);
 		JTable table = new JTable(model){
 			  public boolean isCellEditable(int row,int column){
 				    if(column == 0) return false;
+				    if(column == 4) return false;
 				    return true;
 				  }
 				};
@@ -222,9 +282,9 @@ public class PanelGUI extends JFrame {
 		        Long idSelected = (Long) ((DefaultTableModel)table.getModel()).getValueAt(modelRow,0);
 		        try {
 		        	exoService.deleteExercise(idSelected);
-		        	Dialogs.showSuccessMessage("Deleted with success");
+		        	Dialogs.showSuccessMessage("Supprimé avec succès");
 				} catch (SQLException ex) {
-					Dialogs.showErrorMessage("Error : "+ex.getMessage());
+					Dialogs.showErrorMessage("Erreur : "+ex.getMessage());
 				}
 		        ((DefaultTableModel)table.getModel()).removeRow(modelRow);
 		    }
@@ -242,24 +302,25 @@ public class PanelGUI extends JFrame {
 		        String categorySelected = (String) ((DefaultTableModel)table.getModel()).getValueAt(modelRow,3);
 		        Exercise exoTmp = new Exercise();
 		        exoTmp.setAnswer(answerSelected);
-		        exoTmp.setCategory(categorySelected);
+		        exoTmp.setMatiere(categorySelected);
 		        exoTmp.setId(idSelected);
 		        exoTmp.setQuestion(questionSelected);
 		        try {
 					exoService.updateExercise(exoTmp);
-		        	Dialogs.showSuccessMessage("Updated with success");
+		        	Dialogs.showSuccessMessage("Modifé avec succès");
 				} catch (SQLException ex) {
-					Dialogs.showErrorMessage("Error : "+ex.getMessage());
+					Dialogs.showErrorMessage("Erreur : "+ex.getMessage());
 				}
 		    }
 		};
 		 
-		ButtonColumn buttonColumn = new ButtonColumn(table, delete, 5,"Delete");
+		ButtonColumn buttonColumn = new ButtonColumn(table, delete, 6,"Supprimer");
 		buttonColumn.setMnemonic(KeyEvent.VK_D);
 		
-		ButtonColumn buttonColumnUpdate = new ButtonColumn(table, update, 4,"Update");
+		ButtonColumn buttonColumnUpdate = new ButtonColumn(table, update, 5,"Modifier");
 		buttonColumnUpdate.setMnemonic(KeyEvent.VK_D);
-		this.add(table);
+		JScrollPane scrollPane = new JScrollPane(table);
+		this.add(scrollPane);
 		setSizing();
 		this.setVisible(true);
 	}
@@ -270,14 +331,16 @@ public class PanelGUI extends JFrame {
 		this.getContentPane().removeAll();
 		this.repaint();
 		this.setVisible(false);
-		this.setLayout( new GridLayout(4,2,30,30));
+		this.setLayout( new GridLayout(5,2,30,30));
 		JLabel questionLabel = new JLabel("Question");
-		JLabel answerLabel = new JLabel("Answer");
-		JLabel categoryLabel = new JLabel("Category");
+		JLabel answerLabel = new JLabel("Réponse");
+		JLabel categoryLabel = new JLabel("Matiere");
+		JLabel profLabel = new JLabel("Professeur");
 		JTextArea questionInput = new JTextArea(5, 20);
 		JTextArea answerInput = new JTextArea(5, 20);
 		JTextField categoryInput = new JTextField();
-		JButton button = new JButton("Add");
+		JTextField profInput = new JTextField();
+		JButton button = new JButton("Ajouter");
 		button.setBounds(10, 10, 200,30);
 		this.add(questionLabel);
 		this.add(questionInput);
@@ -289,26 +352,27 @@ public class PanelGUI extends JFrame {
 		categoryInput.setBounds(0,20,250,30);
 		pane.add(categoryInput);
 		this.add(pane);
-		this.add(new JLabel());
 		JPanel pane2 = new JPanel();
 		pane2.setLayout(null);
 		button.setBounds(0,20,100,30);
 		button.addActionListener(e->{
 			exo.setAnswer(answerInput.getText());
-			exo.setCategory(categoryInput.getText());
+			exo.setMatiere(categoryInput.getText());
 			exo.setQuestion(questionInput.getText());
+			exo.setProf(profInput.getText());
 			if(Validator.validateExercise(exo))
 			{
 				button.setEnabled(false);
-				button.setText("Adding...");
+				button.setText("Ajoutant...");
 				try {
 					exoService.createExercise(exo);
 					answerInput.setText("");
 					categoryInput.setText("");
 					questionInput.setText("");
-					Dialogs.showSuccessMessage("Added with success");
+					profInput.setText("");
+					Dialogs.showSuccessMessage("Ajouté avec succès");
 				} catch (SQLException e1) {
-					Dialogs.showErrorMessage("Error : "+e1.getMessage());
+					Dialogs.showErrorMessage("Erreur : "+e1.getMessage());
 				}
 				finally {
 					button.setEnabled(true);
@@ -316,7 +380,14 @@ public class PanelGUI extends JFrame {
 				}
 			}
 		});
+		this.add(profLabel);
+		JPanel pane3 = new JPanel();
+		pane3.setLayout(null);
+		profInput.setBounds(0,20,250,30);
+		pane3.add(profInput);
+		this.add(pane3);
 		pane2.add(button);
+		this.add(new JLabel());
 		this.add(pane2);
         this.setVisible(true);
 	}
