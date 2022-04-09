@@ -8,6 +8,8 @@ import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 
+import gui.utils.MessageWithLink;
+
 public class Dialogs {
 	public static void showErrorMessage(String msg)
 	{
@@ -31,6 +33,11 @@ public class Dialogs {
 	public static void showWarningMessage(String msg)
 	{
 		JOptionPane.showMessageDialog(null, msg, "Warning", JOptionPane.WARNING_MESSAGE);
+	}
+	
+	public static void showMessageForLink(MessageWithLink msg)
+	{
+		JOptionPane.showMessageDialog(null,msg);
 	}
 
 }

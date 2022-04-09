@@ -23,6 +23,8 @@ public class ExerciseService {
 	private Mapper mapper = Mapper.getInstance();
 	private ExerciseDao exerciseDao = ExerciseDao.getDao();
 	
+	private static String postfixCorr = "-corrigé";
+	
 	public boolean createExercise(Exercise exo) throws SQLException
 	{
 		return this.exerciseDao.create(mapper.toMap(exo));
@@ -119,28 +121,23 @@ public class ExerciseService {
 		content2=content2.replace("**qsts**", both);
 		String now = ""+(new Date()).getTime();
 		File file1 = FileUtil.makeFile(now+".tex", content);
+		File file2 = FileUtil.makeFile(now+postfixCorr+".tex", content2);
 		String filename=file1.getName();
 		String path = file1.getAbsolutePath().replace("\\"+filename, "");
 		try {
-			ProcessBuilder pb = new ProcessBuilder("cmd.exe", "/c",LatexUtil.BINPATH+"pdflatex.exe "+filename);
-	        pb.directory(new File(path));
-	        try {
-	            Process p = pb.start();
-	            StreamPrinter fluxSortie = new StreamPrinter(p.getInputStream(), true);
-	            StreamPrinter fluxErreur = new StreamPrinter(p.getErrorStream(), true);
-	            new Thread(fluxSortie).start();
-	            new Thread(fluxErreur).start();
-	            p.waitFor();
-	        } catch (IOException | InterruptedException ex) {
-	            ex.printStackTrace();
-	        }
+			LatexUtil.generateLatex(file1);
+			LatexUtil.generateLatex(file2);
 		}
 		catch(Exception e)
 		{
 			file1.delete();
+			file2.delete();
+			throw e;
 		}
 		file1.delete();
+		file2.delete();
 		File pdf1 = new File(path+File.separator+now+".pdf");
+		File pdf2 = new File(path+File.separator+now+postfixCorr+".pdf");
 		if(pdf1.exists())
 		{
 			JFileChooser f = new JFileChooser();
@@ -151,6 +148,11 @@ public class ExerciseService {
 	        File toSaveFile = new File(saveTo+File.separator+"examen-"+now+".pdf");
 	        toSaveFile.createNewFile();
 	        FileUtil.copyFileUsingStreamWithDelete(pdf1, toSaveFile);
+	        File toSaveFileCorr = new File(saveTo+File.separator+"examen-"+now+postfixCorr+".pdf");
+	        toSaveFileCorr.createNewFile();
+	        FileUtil.copyFileUsingStreamWithDelete(pdf2, toSaveFileCorr);
+	        FileUtil.openFile(toSaveFile);
+	        FileUtil.openFile(toSaveFileCorr);
 	        function.call();
 		}
 		

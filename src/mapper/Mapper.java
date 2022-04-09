@@ -35,6 +35,7 @@ public class Mapper {
 			if(name=="id")
 				continue;
 			try {
+				/* id getId() */
 				Method method = ourClass.getMethod("get"+GenericUtil.toTitleCase(name), null);
 				Object result = method.invoke(object, null);
 				if(result!=null)

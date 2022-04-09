@@ -37,8 +37,10 @@ import javax.swing.table.DefaultTableModel;
 import beans.Exercise;
 import gui.messages.Dialogs;
 import gui.utils.ButtonColumn;
+import gui.utils.MessageWithLink;
 import services.ExerciseService;
 import utils.Callback;
+import utils.LatexUtil;
 import utils.Validator;
 
 public class PanelGUI extends JFrame {
@@ -120,6 +122,16 @@ public class PanelGUI extends JFrame {
 	}
 	private void extracting()
 	{
+		if(LatexUtil.conditionToSetBin())
+		{
+			Dialogs.showMessageForLink(new MessageWithLink("Vous êtes besoin d'ajouter l'emplecement du pdflatex BIN.\n"
+					+ "Si vous n'avais pas le BIN, Veuillez l'installer d'après <a href=\"https://tex.stackexchange.com/questions/49569/where-to-download-pdflatex-exe\">Guide</a>"));
+			try {
+				LatexUtil.setPathForLatexBinary();
+			} catch (Exception e1) {
+				Dialogs.showErrorMessage("Erreur : "+e1.getMessage());
+			}
+		}
 		List<String> cats = new ArrayList<String>();
 		cats.add("");
 		try {
@@ -140,6 +152,7 @@ public class PanelGUI extends JFrame {
 			categoryInput.addItem(cat);
 		}
 		JButton button = new JButton("Extracter");
+		JButton reset = new JButton("Reinstialiser la configuration");
 		this.add(ComoboLabel);
 		this.add(categoryInput);
 		button.addActionListener(e->{
@@ -171,7 +184,14 @@ public class PanelGUI extends JFrame {
 					button.setText("Extract");
 				}
 		});
+		reset.addActionListener(e->{
+			LatexUtil.resetConfiguration();
+			extracting();
+		});
+		this.add(new JLabel());
 		this.add(button);
+		this.add(new JLabel());
+		this.add(reset);
 		for(int i=0;i<29;i++)
 		{
 			this.add(new JLabel());
@@ -216,6 +236,11 @@ public class PanelGUI extends JFrame {
 				if(e.getKeyCode()==KeyEvent.VK_ENTER)
 				{
 					List<Exercise> listExos = new ArrayList<Exercise>();
+					if(table.getSelectedRowCount()<1)
+					{
+						Dialogs.showWarningMessage("Vous pouvez séléctionner au moins une question");
+						return;
+					}
 					for(Integer i : table.getSelectedRows())
 					{
 						Exercise tmp = new Exercise();
@@ -229,7 +254,7 @@ public class PanelGUI extends JFrame {
 					try {
 						String title="Examen";
 						if(matiere!=null)
-							title+="pour matiere "+matiere;
+							title+=" pour matiere "+matiere;
 						exoService.generatePDF(listExos,new Callback() {
 
 							@Override
