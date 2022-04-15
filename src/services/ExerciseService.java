@@ -12,6 +12,7 @@ import javax.swing.JFileChooser;
 
 import beans.Exercise;
 import dao.ExerciseDao;
+import gui.messages.PushNotification;
 import mapper.Mapper;
 import utils.Callback;
 import utils.FileUtil;
@@ -125,6 +126,7 @@ public class ExerciseService {
 		String filename=file1.getName();
 		String path = file1.getAbsolutePath().replace("\\"+filename, "");
 		try {
+			PushNotification.pushNotificationInfo("On a commancé la conversion du latex à PDF, Veuillez attendre un peu du temp","Service commancé");
 			LatexUtil.generateLatex(file1);
 			LatexUtil.generateLatex(file2);
 		}
